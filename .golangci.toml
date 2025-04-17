@@ -1,0 +1,17 @@
+[severity]
+default-severity = "warn"
+
+[[severity.rules]]
+# NOTE: these are disabled in the justfile
+linters = ["exhaustruct", "exhaustive", "godox"]
+severity = "info"
+
+[linters]
+# enable all by default and remove those which we do not find useful
+enable-all = true
+disable = [
+  "gofmt",           # included by gofumpt
+  "nlreturn",        # included by wsl
+  "depguard",        # too restrictive
+  "ireturn",         # too restrictive
+]
