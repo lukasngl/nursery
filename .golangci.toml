@@ -1,0 +1,26 @@
+version = '2'
+
+[linters]
+default = 'all'
+disable = ['depguard', 'ireturn', 'recvcheck', 'nlreturn']
+
+[linters.exclusions]
+generated = 'lax'
+presets = ['comments', 'common-false-positives', 'legacy', 'std-error-handling']
+
+[linters.settings.varnamelen]
+ignore-names = ["ok"]
+
+[severity]
+default = 'warn'
+
+[[severity.rules]]
+severity = 'info'
+linters = ['exhaustive', 'exhaustruct', 'godox']
+
+[formatters]
+enable = ['gci', 'gofumpt', 'goimports']
+
+[formatters.exclusions]
+generated = 'lax'
+paths = ['third_party$', 'builtin$', 'examples$']

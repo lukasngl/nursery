@@ -1,0 +1,34 @@
+[formatter.prettier]
+command = "prettier"
+options = ["-w"]
+includes = ["*.json", "*.md"]
+excludes = [".release-please-manifest.json"]
+
+[formatter.taplo]
+command = "taplo"
+options = ["format"]
+includes = ["*.toml"]
+
+[formatter.gofumpt]
+command = "gofumpt"
+options = ["-w"]
+includes = ["*.go"]
+
+[formatter.gci]
+command = "gci"
+options = ["-w"]
+includes = ["*.go"]
+
+[formatter.shellcheck]
+command = "shellcheck"
+includes = ["*.sh"]
+
+[formatter.shfmt]
+command = "shfmt"
+options = ["-s", "-w"]
+includes = ["*.sh", "Dockerfile"]
+
+[formatter.just]
+command = "./hack/justfmt.sh"
+options = []
+includes = ["justfile"]
