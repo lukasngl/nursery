@@ -1,5 +1,6 @@
 /*
-Opinionated abstraction over the common fan-out fan-in pattern inspired by [structured concurrency].
+Package nursery provides an opinionated abstraction over the common
+fan-out-fan-in pattern inspired by [structured concurrency].
 
 A nursery executes jobs given as closures and collects their results.
 The nursery always waits until all jobs are completed.
@@ -19,9 +20,7 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-type Executor[R any] interface {
-	StartSoon(job func() R)
-}
+type Go[R any] = func(job func() R)
 
 type Unbounded[R any] struct {
 	mx              sync.Mutex
@@ -58,25 +57,25 @@ func NewTuple[A, B any](a A, b B) Tuple[A, B] {
 }
 
 // WithBounded is the bounded variant of [WithUnbounded].
-func WithBounded[R any](ctx context.Context, n int, run func(nursery Executor[R])) []R {
+func WithBounded[R any](ctx context.Context, n int, run func(Go Go[R])) []R {
 	nursery := NewBounded[R](ctx, n)
 
-	run(nursery)
+	run(nursery.Go)
 
 	return nursery.Wait()
 }
 
 // WithUnbounded runs the code block given via the closure with a new nursery
 // and waits for all started tasks to complete.
-func WithUnbounded[R any](run func(nursery Executor[R])) []R {
+func WithUnbounded[R any](run func(Go Go[R])) []R {
 	nursery := NewUnbounded[R]()
 
-	run(nursery)
+	run(nursery.Go)
 
 	return nursery.Wait()
 }
 
-// NewBounded returns a new nursery, that executes at all jobs in parallel.
+// NewUnbounded returns a new nursery, that executes at all jobs in parallel.
 func NewUnbounded[R any]() *Unbounded[R] {
 	nursery := &Unbounded[R]{
 		resultC:         make(chan R),
@@ -117,18 +116,18 @@ func NewBounded[R any](ctx context.Context, n int) *Bounded[R] {
 	}
 }
 
-// StartSoon runs the code given via the closure in the background and collects its result.
-func (nursery *Unbounded[R]) StartSoon(job func() R) {
+// Go runs the code given via the closure in the background and collects its result.
+func (nursery *Unbounded[R]) Go(job func() R) {
 	nursery.startSoon(func() {
 		nursery.resultC <- job()
 	})
 }
 
-// StartSoon runs the code given via the closure in the background and collects its result.
+// Go runs the code given via the closure in the background and collects its result.
 // If no more jobs can be run, because bounds are exceeded, the jobs gets scheduled and executed
 // once other jobs finish.
 // If the [Bounded] nursery's context is finished, the scheduled jobs will not be run.
-func (nursery *Bounded[R]) StartSoon(job func() R) {
+func (nursery *Bounded[R]) Go(job func() R) {
 	nursery.scheduler.Add(1)
 	nursery.inner.startSoon(func() {
 		defer nursery.scheduler.Done()

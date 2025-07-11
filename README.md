@@ -15,14 +15,14 @@ in the given closure, and wait until all jobs are done.
 
 ```go
 
-// This code block, "finsishes" only iff all jobs started with "StartSoon" are done.
-result := nursery.WithUnbounded(func(nursery nursery.Executor[string]) {
-	nursery.StartSoon(func() string {
+// This code block, "finishes" only iff all jobs started with "Go" are done.
+result := nursery.WithUnbounded(func(Go nursery.Go[string]) {
+	Go(func() string {
 		time.Sleep(2 * time.Millisecond)
 		return "World"
 	})
 
-	nursery.StartSoon(func() string {
+	Go(func() string {
 		return "Hello"
 	})
 })

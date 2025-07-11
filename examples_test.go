@@ -24,13 +24,13 @@ func ExampleTuple_Unpack() {
 }
 
 func ExampleWithUnbounded() {
-	result := nursery.WithUnbounded(func(nursery nursery.Executor[string]) {
-		nursery.StartSoon(func() string {
+	result := nursery.WithUnbounded(func(Go nursery.Go[string]) {
+		Go(func() string {
 			time.Sleep(2 * time.Millisecond)
 			return "World"
 		})
 
-		nursery.StartSoon(func() string {
+		Go(func() string {
 			return "Hello"
 		})
 	})
@@ -54,13 +54,17 @@ func ExampleWithBounded() {
 
 	const maxParallel = 2
 
-	results := nursery.WithBounded(ctx, maxParallel, func(ex nursery.Executor[nursery.Tuple[string, error]]) {
-		for range 10 {
-			ex.StartSoon(func() nursery.Tuple[string, error] {
-				return nursery.NewTuple(operationThatWillTimout(ctx))
-			})
-		}
-	})
+	results := nursery.WithBounded(
+		ctx,
+		maxParallel,
+		func(Go nursery.Go[nursery.Tuple[string, error]]) {
+			for range 10 {
+				Go(func() nursery.Tuple[string, error] {
+					return nursery.NewTuple(operationThatWillTimout(ctx))
+				})
+			}
+		},
+	)
 
 	fmt.Println(len(results))
 

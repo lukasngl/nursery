@@ -19,9 +19,9 @@ func TestWithUnbounded_Completes(t *testing.T) {
 	property := func(order executionOrder) bool {
 		t.Logf("running with order %s", order)
 
-		completed := nursery.WithUnbounded(func(nursery nursery.Executor[int]) {
+		completed := nursery.WithUnbounded(func(Go nursery.Go[int]) {
 			for position := range order.Size() {
-				nursery.StartSoon(func() int {
+				Go(func() int {
 					order.Wait(position)
 
 					return position
@@ -66,19 +66,23 @@ func TestWithBounded_Completes(t *testing.T) {
 
 		t.Logf("running with bound %d and order %s", bound, order)
 
-		completed := nursery.WithBounded(context.TODO(), bound, func(nursery nursery.Executor[int]) {
-			for position := range order.Size() {
-				nursery.StartSoon(func() int {
-					t.Logf("job[%3d] started", position)
-					defer t.Logf("job[%3d] done", position)
-					order.Wait(position)
+		completed := nursery.WithBounded(
+			context.TODO(),
+			bound,
+			func(Go nursery.Go[int]) {
+				for position := range order.Size() {
+					Go(func() int {
+						t.Logf("job[%3d] started", position)
+						defer t.Logf("job[%3d] done", position)
+						order.Wait(position)
 
-					return position
-				})
-			}
+						return position
+					})
+				}
 
-			order.Run()
-		})
+				order.Run()
+			},
+		)
 
 		ok := true
 
@@ -114,9 +118,9 @@ func TestWithBounded_CancelStopsScheduled(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond)
 		defer cancel()
 
-		completed := nursery.WithBounded(ctx, int(bound), func(nursery nursery.Executor[int]) {
+		completed := nursery.WithBounded(ctx, int(bound), func(Go nursery.Go[int]) {
 			for position := range bound + overflow {
-				nursery.StartSoon(func() int {
+				Go(func() int {
 					<-ctx.Done()
 
 					return int(position)
